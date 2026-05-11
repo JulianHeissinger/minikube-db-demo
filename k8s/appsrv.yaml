@@ -1,0 +1,30 @@
+# Quarkus Application Server
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: appsrv
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: appsrv
+  template:
+    metadata:
+      labels:
+        component: appsrv
+    spec:
+      initContainers:
+        - name: check-db-ready
+          image: postgres:14
+          command: [ 'sh', '-c',
+            'until pg_isready -h postgres -p 5432; 
+            do echo waiting for database; sleep 2; done;' ]
+      containers:
+        - name: appsrv
+          image: ghcr.io/htl-leonding/backend:latest
+          # remove this when stable. Currently, we do not take care of version numbers
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+#          command: ["tail", "-f", "/dev/null"]
